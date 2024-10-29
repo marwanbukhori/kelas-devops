@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-configmap
+data:
+  # property-like keys; each key maps to a simple value
+  MYSQL_DATABASE: test
+  MYSQL_USER : "test"
+  PMA_USER : "test"
+  PMA_HOST: mysql_service

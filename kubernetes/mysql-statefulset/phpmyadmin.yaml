@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: phpmyadmin-service
+  labels:
+    app: phpmyadmin-service
+spec:
+  ports:
+    - port: 8081
+      name: phpmyadmin-service
+  type: NodePort
+  selector:
+    app: phpmyadmin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin
+spec:
+  selector:
+    matchLabels:
+      app: phpmyadmin # has to match .spec.template.metadata.labels
+  replicas: 1 # by default is 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: phpmyadmin
+          image: phpmyadmin:latest
+          env:
+            - name: PMA_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-configmap
+                  key: PMA_USER
+            - name: PMA_HOST
+              value: mysql-service
+            - name: PMA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: PMA_PASSWORD
+          ports:
+            - containerPort: 8081
+              name: phpmyadmin
+          readinessProbe:
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 8081
+              httpHeaders:
+                - name: Accept
+                  value: ""
+            initialDelaySeconds: 15
+            periodSeconds: 10

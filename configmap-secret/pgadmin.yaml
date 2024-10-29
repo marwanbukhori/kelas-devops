@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin-deployment
+  labels:
+    app: pgadmin-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin-deployment
+  template:
+    metadata:
+      labels:
+        app: pgadmin-deployment
+    spec:
+      containers:
+        - name: pgadmin
+          image: elestio/pgadmin
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "marwanbukhori.dev@gmail.com"
+            - name: PGADMIN_LISTEN_PORT
+              value: "8080"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "marwan"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_HOST
+              value: "postgres-service"
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgadmin-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: pgadmin-config
+                  key: POSTGRES_DB
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: test
+              mountPath: /var/lib/pgadmin
+      volumes:
+        - name: test
+          persistentVolumeClaim:
+            claimName: pvc-pgadmin-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-service
+spec:
+  selector:
+    app: pgadmin-deployment
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort

@@ -1,0 +1,44 @@
+name: docker-git-training
+
+services:
+  frontend:
+    build: ./DevopsClassFront
+    restart: always
+    ports:
+      - "8001:80"
+    networks:
+      - devnetwork
+    volumes:
+      - ./DevopsClassFront/:/app
+
+  backend:
+    build: ./DevopsClass
+
+    restart: always
+    depends_on:
+      - db
+      - frontend
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      - devnetwork
+
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./database:/var/lib/mysql
+    networks:
+      - devnetwork
+
+networks:
+  devnetwork:
+    driver: bridge
